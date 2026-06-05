@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Inventario PIL Andina</title>
+</head>
+<body>
+    <nav style="background-color: #f4f4f4; padding: 15px; margin-bottom: 20px; border-bottom: 2px solid #ccc;">
+        <strong>Navegación del Sistema:</strong> | 
+        <a href="/inventario/stock" style="font-weight: bold; margin-right: 15px;">Módulo de Inventario</a> | 
+        
+        <a href="/monitoreo/tecnico" style="color: blue; font-weight: bold; margin-right: 15px;">Ir al Módulo de Monitoreo</a> | 
+        
+        <a href="/auth/logout" style="color: red; float: right;">Cerrar Sesión</a>
+    </nav>
+
+    <h2>Módulo de Inventarios - Vista de Stock Consolidado</h2>
+    <p>Sesión activa correctamente. Estado del backend: Operativo.</p>
+    
+    <div style="margin-bottom: 20px;">
+        <a href="/inventario/reporte/vencimientos/csv" style="padding: 10px; background-color: green; color: white; text-decoration: none; font-weight: bold;">
+            Descargar Reporte de Vencimientos
+        </a>
+    </div>
+
+    <h3>Formulario para Registrar Producción de Lote</h3>
+    <form action="/inventario/lotes/registrar" method="POST">
+        <input type="text" name="numero_lote" placeholder="Número de Lote (ej: L-999)" required><br><br>
+        <input type="number" name="id_presentacion" placeholder="ID Presentación" required><br><br>
+        <input type="number" name="id_planta" placeholder="ID Planta" required><br><br>
+        <input type="number" name="id_bodega" placeholder="ID Bodega" required><br><br>
+        <input type="date" name="fecha_produccion" required> (Fecha Prod)<br><br>
+        <input type="date" name="fecha_vencimiento" required> (Fecha Venc)<br><br>
+        <input type="number" name="cantidad" placeholder="Cantidad" required><br><br>
+        <input type="text" name="tecnico_responsable" placeholder="Técnico Responsable" required><br><br>
+        
+        <button type="submit">Registrar Lote</button>
+    </form>
+</body>
+</html>

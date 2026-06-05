@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Monitoreo Temporal - Admin</title>
+</head>
+<body>
+    <h2>Panel de Monitoreo Técnico (Solo Administradores)</h2>
+    <p><strong>Conexiones activas a MySQL:</strong> {{ conexiones }}</p>
+    
+    <h3>Últimos logs de auditoría (Triggers):</h3>
+    <ul>
+        {% for log in logs %}
+        <li>
+            [{{ log.fecha_accion }}] Tabla: {{ log.tabla_afectada }} | 
+            Acción: {{ log.accion_realizada }} | Usuario: {{ log.usuario_bd }}
+        </li>
+        {% else %}
+        <li>No hay acciones registradas en la tabla de auditoría todavía.</li>
+        {% endfor %}
+    </ul>
+    <br>
+    <a href="/auth/logout">Cerrar Sesión</a>
+</body>
+</html>
