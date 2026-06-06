@@ -1,6 +1,8 @@
 __pycache__/
+*/__pycache__/
+**/__pycache__/
 *.py[cod]
+*$py.class
 .venv/
-backups/*.sql
+venv/
 .env
-*.log
