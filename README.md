@@ -2,6 +2,8 @@
 
 Proyecto integrador Base de Datos 2 — Cervecería Boliviana PIL Andina.
 
+**Repositorio:** https://github.com/AngelaMaqui/PilCode
+
 ## Integrantes
 > Completar con los nombres del grupo
 
