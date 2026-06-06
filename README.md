@@ -5,7 +5,10 @@ Proyecto integrador Base de Datos 2 — Cervecería Boliviana PIL Andina.
 **Repositorio:** https://github.com/AngelaMaqui/PilCode
 
 ## Integrantes
-> Completar con los nombres del grupo
+- Nombre: Annett Abigail Luna Quispe         CI: 8482243		  Rol: Backend Developer
+- Nombre: Angela Victoria Maqui Quispe       CI: 13694497	  Rol: DBA (Administrador BD)
+- Nombre: Eva Jhenny Tola Huanca             CI: 9903814      Rol: Frontend Developer
+
 
 ## Requisitos
 - Python 3.10+
@@ -40,11 +43,11 @@ Proyecto integrador Base de Datos 2 — Cervecería Boliviana PIL Andina.
 
 ## Credenciales de acceso
 
-| Usuario | Contraseña | Rol |
-|---------|------------|-----|
-| admin_pil | admin123 | Administrador |
-| carlos_gerente | gerente123 | Gerente |
-| dist_tiendas_bolivia | dist123 | Distribuidor |
+|      Usuario         | Contraseña |    Rol        |
+|----------------------|------------|---------------|
+| admin_pil            | admin123   | Administrador |
+| carlos_gerente       | gerente123 | Gerente       |
+| dist_tiendas_bolivia | dist123    | Distribuidor  |
 
 ## Módulos implementados
 
