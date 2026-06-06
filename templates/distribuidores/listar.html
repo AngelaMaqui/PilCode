@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Distribuidores — PIL Andina{% endblock %}
+{% block content %}
+<div class="page-header"><h2>Gestión de Distribuidores</h2><p>Red de distribución por ciudad y zona</p></div>
+
+<div class="card" style="margin-bottom:1.5rem">
+    <div class="card-header">
+        <h3>Buscar distribuidores</h3>
+        {% if session.get('role_id') in [1,2] %}<a href="{{ url_for('distribuidores.crear') }}" class="btn btn-accent btn-sm">+ Nuevo</a>{% endif %}
+    </div>
+    <div class="card-body">
+        <form method="GET" class="form-grid">
+            <div class="form-group"><label>Búsqueda</label><input class="form-control" name="q" value="{{ q }}" placeholder="Razón social, NIT, contacto"></div>
+            <div class="form-group"><label>Ciudad</label>
+                <select class="form-control" name="ciudad"><option value="">Todas</option>{% for c in ciudades %}<option value="{{ c }}" {% if ciudad_filtro==c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select>
+            </div>
+            <div class="form-group"><label>Zona</label>
+                <select class="form-control" name="zona"><option value="">Todas</option>{% for z in zonas %}<option value="{{ z }}" {% if zona_filtro==z %}selected{% endif %}>{{ z }}</option>{% endfor %}</select>
+            </div>
+            <div class="form-group" style="align-self:end"><button class="btn btn-primary">Filtrar</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h3>Distribuidores ({{ distribuidores|length }})</h3></div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>NIT</th><th>Razón Social</th><th>Ciudad</th><th>Zona</th><th>Contacto</th><th>Teléfono</th><th>Acciones</th></tr></thead>
+            <tbody>
+            {% for d in distribuidores %}
+            <tr>
+                <td>{{ d.nit }}</td><td><strong>{{ d.razon_social }}</strong></td><td>{{ d.ciudad }}</td><td>{{ d.zona }}</td>
+                <td>{{ d.contacto_nombre }}</td><td>{{ d.telefono }}</td>
+                <td>{% if session.get('role_id') in [1,2] %}
+                    <a href="{{ url_for('distribuidores.editar', id_distribuidor=d.id_distribuidor) }}" class="btn btn-sm btn-outline">Editar</a>
+                {% endif %}</td>
+            </tr>
+            {% else %}<tr><td colspan="7">Sin resultados.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Respaldos — PIL Andina{% endblock %}
+{% block content %}
+<div class="page-header"><h2>Copias de Seguridad</h2><p>Crear, listar y restaurar respaldos de la base de datos</p></div>
+
+<div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon blue">💾</div><div><div class="stat-value">{{ backups|length }}</div><div class="stat-label">Respaldos disponibles</div></div></div>
+</div>
+
+<div class="content-grid two-col">
+    <div class="card">
+        <div class="card-header"><h3>Crear respaldo</h3></div>
+        <div class="card-body">
+            <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem">Genera un volcado SQL con <code>mysqldump</code> de la base <strong>pil_andina</strong>.</p>
+            <form method="POST" action="{{ url_for('backups.crear_backup') }}">
+                <button type="submit" class="btn btn-accent">Generar respaldo ahora</button>
+            </form>
+            <p style="color:var(--text-muted);font-size:0.78rem;margin-top:1rem">También puede programarse con <code>scripts/backup_programado.bat</code></p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>Restaurar respaldo</h3></div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('backups.restaurar_backup') }}" onsubmit="return confirm('¿Restaurar este respaldo? Se sobrescribirán los datos actuales.')">
+                <div class="form-group"><label>Seleccionar archivo</label>
+                    <select class="form-control" name="archivo" required>
+                        <option value="">— Seleccione —</option>
+                        {% for archivo in backups %}<option value="{{ archivo }}">{{ archivo }}</option>{% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" {% if not backups %}disabled{% endif %}>Restaurar base de datos</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-top:1.5rem">
+    <div class="card-header"><h3>Archivos de respaldo</h3></div>
+    <div class="table-wrap">
+        {% if backups %}
+        <table class="data-table">
+            <thead><tr><th>Archivo</th><th>Tipo</th></tr></thead>
+            <tbody>{% for archivo in backups %}<tr><td><strong>{{ archivo }}</strong></td><td><span class="badge badge-info">SQL</span></td></tr>{% endfor %}</tbody>
+        </table>
+        {% else %}<div class="empty-state"><p>No hay respaldos. Cree uno primero.</p></div>{% endif %}
+    </div>
+</div>
+{% endblock %}

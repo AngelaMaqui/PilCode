@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Reportes — PIL Andina{% endblock %}
+{% block content %}
+<div class="page-header"><h2>Reportes Gerenciales</h2><p>Análisis de stock, vencimientos, rotación y producción</p></div>
+
+<div class="stats-grid">
+    <a href="{{ url_for('reportes.exportar', tipo='stock') }}" class="stat-card" style="text-decoration:none;color:inherit"><div class="stat-icon blue">📦</div><div><div class="stat-value">CSV</div><div class="stat-label">Stock consolidado</div></div></a>
+    <a href="{{ url_for('reportes.exportar', tipo='vencimientos') }}" class="stat-card" style="text-decoration:none;color:inherit"><div class="stat-icon amber">⏰</div><div><div class="stat-value">CSV</div><div class="stat-label">Alertas vencimiento</div></div></a>
+    <a href="{{ url_for('reportes.exportar', tipo='pedidos') }}" class="stat-card" style="text-decoration:none;color:inherit"><div class="stat-icon red">📋</div><div><div class="stat-value">CSV</div><div class="stat-label">Pedidos pendientes</div></div></a>
+    <a href="{{ url_for('reportes.exportar', tipo='rotacion') }}" class="stat-card" style="text-decoration:none;color:inherit"><div class="stat-icon green">📈</div><div><div class="stat-value">CSV</div><div class="stat-label">Rotación inventario</div></div></a>
+</div>
+
+<div class="content-grid" style="gap:1.5rem">
+    <div class="card"><div class="card-header"><h3>Stock por producto y planta</h3><a href="{{ url_for('reportes.exportar', tipo='stock') }}" class="btn btn-sm btn-success">↓ Exportar</a></div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Producto</th><th>Planta</th><th>Bodega</th><th>Disponible</th><th>Estado</th></tr></thead><tbody>
+        {% for s in stock[:15] %}<tr><td>{{ s.Producto }} {{ s.Presentacion }}</td><td>{{ s.Planta }}</td><td>{{ s.Bodega }}</td><td>{{ s.Total_Disponible }}</td><td>{{ s.Estado_Inventario }}</td></tr>{% endfor %}
+        </tbody></table></div>
+    </div>
+
+    <div class="card"><div class="card-header"><h3>Productos próximos a vencer (30 días)</h3><a href="{{ url_for('reportes.exportar', tipo='vencimientos') }}" class="btn btn-sm btn-success">↓ Exportar</a></div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Lote</th><th>Producto</th><th>Vencimiento</th><th>Días</th><th>Urgencia</th></tr></thead><tbody>
+        {% for v in vencimientos %}<tr><td>{{ v.Numero_Lote }}</td><td>{{ v.Producto }} {{ v.Presentacion }}</td><td>{{ v.Fecha_Vencimiento }}</td><td>{{ v.Dias_Restantes }}</td><td>{{ v.Nivel_Urgencia }}</td></tr>{% endfor %}
+        </tbody></table></div>
+    </div>
+
+    <div class="card"><div class="card-header"><h3>Rotación de inventario (mes actual vs anterior)</h3><a href="{{ url_for('reportes.exportar', tipo='rotacion') }}" class="btn btn-sm btn-success">↓ Exportar</a></div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Producto</th><th>Presentación</th><th>Salidas mes actual</th><th>Salidas mes anterior</th></tr></thead><tbody>
+        {% for r in rotacion %}<tr><td>{{ r.producto }}</td><td>{{ r.presentacion }}</td><td>{{ r.salidas_mes_actual }}</td><td>{{ r.salidas_mes_anterior }}</td></tr>{% endfor %}
+        </tbody></table></div>
+    </div>
+
+    <div class="card"><div class="card-header"><h3>Pedidos pendientes por distribuidor</h3><a href="{{ url_for('reportes.exportar', tipo='pedidos') }}" class="btn btn-sm btn-success">↓ Exportar</a></div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Pedido</th><th>Distribuidor</th><th>Ciudad</th><th>Importe</th><th>Estado</th></tr></thead><tbody>
+        {% for p in pedidos_pend %}<tr><td>{{ p.Nro_Pedido }}</td><td>{{ p.Distribuidor }}</td><td>{{ p.Ciudad_Destino }}</td><td>{{ p.Importe_Bs }}</td><td>{{ p.Estado_Despacho }}</td></tr>{% endfor %}
+        </tbody></table></div>
+    </div>
+
+    <div class="card"><div class="card-header"><h3>Producción por planta (últimos 30 días)</h3><a href="{{ url_for('reportes.exportar', tipo='produccion') }}" class="btn btn-sm btn-success">↓ Exportar</a></div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Planta</th><th>Fecha</th><th>Lotes</th><th>Unidades</th></tr></thead><tbody>
+        {% for pr in produccion %}<tr><td>{{ pr.nombre_planta }}</td><td>{{ pr.fecha }}</td><td>{{ pr.lotes }}</td><td>{{ pr.unidades }}</td></tr>{% endfor %}
+        </tbody></table></div>
+    </div>
+</div>
+{% endblock %}

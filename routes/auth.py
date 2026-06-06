@@ -1,37 +1,40 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from werkzeug.security import check_password_hash
+from database import get_db_connection
 
 auth_bp = Blueprint('auth', __name__)
+
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
+        username = request.form['username'].strip()
         password = request.form['password']
- 
-        if username == 'admin_pil' and password == 'admin123':
-            session['user_id'] = 1
-            session['username'] = 'admin_pil'
-            session['role_id'] = 1  # Rol 1: Administrador (Acceso total)
-            flash("¡Bypass Administrador activado!", "success")
-            return redirect(url_for('inventario.ver_stock'))
 
-        elif username == 'carlos_gerente' and password == 'gerente123':
-            session['user_id'] = 2
-            session['username'] = 'carlos_gerente'
-            session['role_id'] = 2  # Rol 2: Gerente (Dashboard y Reportes)
-            flash("¡Bypass Gerente activado!", "success")
-            return redirect(url_for('inventario.ver_stock'))
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            '''SELECT u.id_usuario, u.username, u.password_hash, u.id_rol, r.nombre_rol
+               FROM usuarios u JOIN roles r ON u.id_rol = r.id_rol
+               WHERE u.username = %s AND u.activo = 1''',
+            (username,)
+        )
+        user = cursor.fetchone()
+        cursor.close()
+        conn.close()
 
-        elif username == 'dist_tiendas_bolivia' and password == 'dist123':
-            session['user_id'] = 3
-            session['username'] = 'dist_tiendas_bolivia'
-            session['role_id'] = 3 
-            flash("¡Bypass Distribuidor activado!", "success")
-            return redirect(url_for('inventario.ver_stock'))
-        
-        flash("Credenciales incorrectas o usuario no válido.", "danger")
-            
+        if user and user['password_hash'] and check_password_hash(user['password_hash'], password):
+            session['user_id'] = user['id_usuario']
+            session['username'] = user['username']
+            session['role_id'] = user['id_rol']
+            session['role_name'] = user['nombre_rol']
+            flash(f"Bienvenido, {user['username']} ({user['nombre_rol']})", "success")
+            return redirect(url_for('dashboard.index'))
+
+        flash("Credenciales incorrectas o usuario inactivo.", "danger")
+
     return render_template('login.html')
+
 
 @auth_bp.route('/logout')
 def logout():

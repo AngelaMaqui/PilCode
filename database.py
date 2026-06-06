@@ -7,9 +7,9 @@ import os
 db_config = {
     "host": "localhost",
     "user": "root",
-    "password": "superadministrador",
-    "database": "empresa_pil_andina",
-    "port": 3308
+    "password": "",
+    "database": "pil_andina",
+    "port": 3306
 }
 
 try:

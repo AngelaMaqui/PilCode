@@ -1,40 +1,100 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Inventario PIL Andina</title>
-</head>
-<body>
-    <nav style="background-color: #f4f4f4; padding: 15px; margin-bottom: 20px; border-bottom: 2px solid #ccc;">
-        <strong>Navegación del Sistema:</strong> | 
-        <a href="/inventario/stock" style="font-weight: bold; margin-right: 15px;">Módulo de Inventario</a> | 
-        
-        <a href="/monitoreo/tecnico" style="color: blue; font-weight: bold; margin-right: 15px;">Ir al Módulo de Monitoreo</a> | 
-        
-        <a href="/auth/logout" style="color: red; float: right;">Cerrar Sesión</a>
-    </nav>
+{% extends "base.html" %}
+{% block title %}Inventario — PIL Andina{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Inventario de Stock</h2>
+    <p>Control por producto, lote y bodega con alertas de stock mínimo/máximo</p>
+</div>
 
-    <h2>Módulo de Inventarios - Vista de Stock Consolidado</h2>
-    <p>Sesión activa correctamente. Estado del backend: Operativo.</p>
-    
-    <div style="margin-bottom: 20px;">
-        <a href="/inventario/reporte/vencimientos/csv" style="padding: 10px; background-color: green; color: white; text-decoration: none; font-weight: bold;">
-            Descargar Reporte de Vencimientos
-        </a>
+{% set total_items = stock|length %}
+{% set ns = namespace(criticos=0, bajos=0) %}
+{% for item in stock %}
+    {% set estado_upper = item.Estado_Inventario|upper %}
+    {% if 'CRIT' in estado_upper or 'CRÍT' in estado_upper %}{% set ns.criticos = ns.criticos + 1 %}
+    {% elif 'BAJ' in estado_upper %}{% set ns.bajos = ns.bajos + 1 %}{% endif %}
+{% endfor %}
+{% set ok = total_items - ns.criticos - ns.bajos %}
+
+<div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon blue">📦</div><div><div class="stat-value">{{ total_items }}</div><div class="stat-label">Registros</div></div></div>
+    <div class="stat-card"><div class="stat-icon green">✓</div><div><div class="stat-value">{{ ok }}</div><div class="stat-label">Stock normal</div></div></div>
+    <div class="stat-card"><div class="stat-icon amber">⚠</div><div><div class="stat-value">{{ ns.bajos }}</div><div class="stat-label">Stock bajo</div></div></div>
+    <div class="stat-card"><div class="stat-icon red">!</div><div><div class="stat-value">{{ ns.criticos }}</div><div class="stat-label">Stock crítico</div></div></div>
+</div>
+
+<div class="card" style="margin-bottom:1.5rem">
+    <div class="card-header"><h3>Búsqueda avanzada</h3></div>
+    <div class="card-body">
+        <form method="GET" class="form-grid">
+            <div class="form-group"><label>Producto</label><input class="form-control" name="producto" value="{{ filtro_producto }}" placeholder="Paceña, Huari..."></div>
+            <div class="form-group"><label>Planta</label>
+                <select class="form-control" name="planta"><option value="">Todas</option>{% for p in plantas %}<option value="{{ p }}" {% if filtro_planta==p %}selected{% endif %}>{{ p }}</option>{% endfor %}</select>
+            </div>
+            <div class="form-group"><label>Bodega</label>
+                <select class="form-control" name="bodega"><option value="">Todas</option>{% for b in bodegas %}<option value="{{ b }}" {% if filtro_bodega==b %}selected{% endif %}>{{ b }}</option>{% endfor %}</select>
+            </div>
+            <div class="form-group"><label>Estado</label>
+                <select class="form-control" name="estado"><option value="">Todos</option>{% for e in estados %}<option value="{{ e }}" {% if filtro_estado==e %}selected{% endif %}>{{ e }}</option>{% endfor %}</select>
+            </div>
+            <div class="form-group" style="align-self:end">
+                <button class="btn btn-primary">Filtrar</button>
+                <a href="{{ url_for('inventario.ver_stock') }}" class="btn btn-outline">Limpiar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="content-grid {% if session.get('role_id') in [1, 2] %}two-col{% endif %}">
+    <div class="card">
+        <div class="card-header">
+            <h3>Stock Consolidado ({{ stock|length }})</h3>
+            {% if session.get('role_id') in [1, 2] %}
+            <a href="{{ url_for('inventario.exportar_vencimientos_csv') }}" class="btn btn-success btn-sm">↓ Vencimientos CSV</a>
+            {% endif %}
+        </div>
+        <div class="table-wrap">
+            {% if stock %}
+            <table class="data-table">
+                <thead><tr><th>Producto</th><th>Presentación</th><th>Planta</th><th>Bodega</th><th>Disponible</th><th>Mínimo</th><th>Estado</th></tr></thead>
+                <tbody>
+                {% for item in stock %}
+                <tr>
+                    <td><strong>{{ item.Producto }}</strong></td><td>{{ item.Presentacion }}</td><td>{{ item.Planta }}</td><td>{{ item.Bodega }}</td>
+                    <td>{{ item.Total_Disponible }}</td><td>{{ item.Stock_Minimo_Configurado }}</td>
+                    <td><span class="badge {% if 'CRIT' in item.Estado_Inventario|upper or 'CRÍT' in item.Estado_Inventario|upper %}badge-danger{% elif 'BAJ' in item.Estado_Inventario|upper %}badge-warn{% else %}badge-ok{% endif %}">{{ item.Estado_Inventario }}</span></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}<div class="empty-state"><p>No hay registros con esos filtros.</p></div>{% endif %}
+        </div>
     </div>
 
-    <h3>Formulario para Registrar Producción de Lote</h3>
-    <form action="/inventario/lotes/registrar" method="POST">
-        <input type="text" name="numero_lote" placeholder="Número de Lote (ej: L-999)" required><br><br>
-        <input type="number" name="id_presentacion" placeholder="ID Presentación" required><br><br>
-        <input type="number" name="id_planta" placeholder="ID Planta" required><br><br>
-        <input type="number" name="id_bodega" placeholder="ID Bodega" required><br><br>
-        <input type="date" name="fecha_produccion" required> (Fecha Prod)<br><br>
-        <input type="date" name="fecha_vencimiento" required> (Fecha Venc)<br><br>
-        <input type="number" name="cantidad" placeholder="Cantidad" required><br><br>
-        <input type="text" name="tecnico_responsable" placeholder="Técnico Responsable" required><br><br>
-        
-        <button type="submit">Registrar Lote</button>
-    </form>
-</body>
-</html>
+    {% if session.get('role_id') in [1, 2] %}
+    <div class="card">
+        <div class="card-header"><h3>Registrar Producción de Lote</h3></div>
+        <div class="card-body">
+            <form action="{{ url_for('inventario.registrar_lote') }}" method="POST">
+                <div class="form-grid">
+                    <div class="form-group"><label>Número de lote</label><input class="form-control" name="numero_lote" placeholder="L-2026-001" required></div>
+                    <div class="form-group"><label>Presentación</label>
+                        <select class="form-control" name="id_presentacion" required>{% for pr in presentaciones %}<option value="{{ pr.id_presentacion }}">{{ pr.codigo_presentacion }} ({{ pr.volumen }})</option>{% endfor %}</select>
+                    </div>
+                    <div class="form-group"><label>Planta</label>
+                        <select class="form-control" name="id_planta" required>{% for p in plantas_sel %}<option value="{{ p.id_planta }}">{{ p.nombre_planta }}</option>{% endfor %}</select>
+                    </div>
+                    <div class="form-group"><label>Bodega destino</label>
+                        <select class="form-control" name="id_bodega" required>{% for b in bodegas_sel %}<option value="{{ b.id_bodega }}">{{ b.nombre_bodega }}</option>{% endfor %}</select>
+                    </div>
+                    <div class="form-group"><label>Fecha producción</label><input class="form-control" type="date" name="fecha_produccion" required></div>
+                    <div class="form-group"><label>Fecha vencimiento</label><input class="form-control" type="date" name="fecha_vencimiento" required></div>
+                    <div class="form-group"><label>Cantidad (unidades)</label><input class="form-control" type="number" name="cantidad" min="1" required></div>
+                    <div class="form-group"><label>Técnico responsable</label><input class="form-control" name="tecnico_responsable" required></div>
+                </div>
+                <div class="form-actions"><button type="submit" class="btn btn-accent">Registrar lote (SP)</button></div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

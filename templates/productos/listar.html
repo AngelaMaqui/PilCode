@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Productos — PIL Andina{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Gestión de Productos</h2>
+    <p>Catálogo de cervezas, presentaciones y precios</p>
+</div>
+
+<div class="card" style="margin-bottom:1.5rem">
+    <div class="card-header">
+        <h3>Buscar productos</h3>
+        {% if session.get('role_id') in [1,2] %}
+        <a href="{{ url_for('productos.crear') }}" class="btn btn-accent btn-sm">+ Nuevo producto</a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <form method="GET" class="form-grid">
+            <div class="form-group"><label>Nombre o código</label><input class="form-control" name="q" value="{{ q }}"></div>
+            <div class="form-group"><label>Tipo</label>
+                <select class="form-control" name="tipo">
+                    <option value="">Todos</option>
+                    {% for t in tipos %}<option value="{{ t }}" {% if tipo_filtro==t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="align-self:end"><button class="btn btn-primary">Filtrar</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom:1.5rem">
+    <div class="card-header"><h3>Productos ({{ productos|length }})</h3></div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Código</th><th>Nombre</th><th>Tipo</th><th>Graduación</th><th>Precio Bs.</th><th>Stock Mín/Máx</th><th>Acciones</th></tr></thead>
+            <tbody>
+            {% for p in productos %}
+            <tr>
+                <td><strong>{{ p.codigo_unico }}</strong></td>
+                <td>{{ p.nombre_comercial }}</td>
+                <td>{{ p.tipo_cerveza }}</td>
+                <td>{{ p.graduacion_alcoholica }}%</td>
+                <td>{{ p.precio_actual }}</td>
+                <td>{{ p.stock_minimo_alerta }} / {{ p.stock_maximo_alerta }}</td>
+                <td>
+                    {% if session.get('role_id') in [1,2] %}
+                    <a href="{{ url_for('productos.editar', id_producto=p.id_producto) }}" class="btn btn-sm btn-outline">Editar</a>
+                    {% if session.get('role_id') == 1 %}
+                    <form method="POST" action="{{ url_for('productos.eliminar', id_producto=p.id_producto) }}" style="display:inline" onsubmit="return confirm('¿Eliminar producto?')">
+                        <button class="btn btn-sm btn-outline" style="color:var(--danger)">Eliminar</button>
+                    </form>
+                    {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}<tr><td colspan="7" class="empty-state">Sin productos.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h3>Presentaciones</h3></div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Código</th><th>Producto</th><th>Volumen</th><th>Empaque</th></tr></thead>
+            <tbody>
+            {% for pr in presentaciones %}
+            <tr><td>{{ pr.codigo_presentacion }}</td><td>{{ pr.nombre_comercial }}</td><td>{{ pr.volumen }}</td><td>{{ pr.empaque }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if session.get('role_id') in [1,2] %}
+    <div class="card-body" style="border-top:1px solid var(--border)">
+        <h4 style="margin-bottom:1rem;font-size:0.9rem">Agregar presentación</h4>
+        <form method="POST" action="{{ url_for('productos.crear_presentacion') }}" class="form-grid">
+            <div class="form-group"><label>Producto</label>
+                <select class="form-control" name="id_producto" required>
+                    {% for p in productos %}<option value="{{ p.id_producto }}">{{ p.nombre_comercial }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group"><label>Código</label><input class="form-control" name="codigo_presentacion" required></div>
+            <div class="form-group"><label>Volumen</label><input class="form-control" name="volumen" placeholder="355ml" required></div>
+            <div class="form-group"><label>Empaque</label><input class="form-control" name="empaque" required></div>
+            <div class="form-group" style="align-self:end"><button class="btn btn-accent">Agregar</button></div>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

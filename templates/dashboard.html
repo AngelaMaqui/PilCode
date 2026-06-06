@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — PIL Andina{% endblock %}
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Dashboard Gerencial</h2>
+    <p>Resumen operativo de inventario, producción y distribución</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon blue">🍺</div><div><div class="stat-value">{{ total_productos }}</div><div class="stat-label">Productos activos</div></div></div>
+    <div class="stat-card"><div class="stat-icon amber">⚠</div><div><div class="stat-value">{{ alertas_venc }}</div><div class="stat-label">Alertas de vencimiento</div></div></div>
+    <div class="stat-card"><div class="stat-icon red">📋</div><div><div class="stat-value">{{ pedidos_pend }}</div><div class="stat-label">Pedidos pendientes</div></div></div>
+    <div class="stat-card"><div class="stat-icon green">🚚</div><div><div class="stat-value">{{ total_dist }}</div><div class="stat-label">Distribuidores</div></div></div>
+</div>
+
+<div class="content-grid two-col">
+    <div class="card">
+        <div class="card-header"><h3>Producción del mes por planta</h3></div>
+        <div class="card-body"><canvas id="chartProduccion" height="220"></canvas></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>Estado del inventario</h3></div>
+        <div class="card-body"><canvas id="chartStock" height="220"></canvas></div>
+    </div>
+</div>
+
+<div class="content-grid two-col" style="margin-top:1.5rem">
+    <div class="card">
+        <div class="card-header"><h3>Pedidos pendientes</h3><a href="{{ url_for('pedidos.listar') }}" class="btn btn-sm btn-outline">Ver todos</a></div>
+        <div class="table-wrap">
+            {% if pedidos_recientes %}
+            <table class="data-table">
+                <thead><tr><th>#</th><th>Distribuidor</th><th>Ciudad</th><th>Entrega</th><th>Estado</th></tr></thead>
+                <tbody>
+                {% for p in pedidos_recientes %}
+                <tr>
+                    <td>{{ p.Nro_Pedido }}</td>
+                    <td>{{ p.Distribuidor }}</td>
+                    <td>{{ p.Ciudad_Destino }}</td>
+                    <td>{{ p.Fecha_Entrega_Pactada }}</td>
+                    <td><span class="badge badge-warn">{{ p.Estado_Despacho }}</span></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}<div class="empty-state"><p>Sin pedidos pendientes.</p></div>{% endif %}
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>Próximos a vencer</h3><a href="{{ url_for('reportes.index') }}" class="btn btn-sm btn-outline">Reportes</a></div>
+        <div class="table-wrap">
+            {% if vencimientos %}
+            <table class="data-table">
+                <thead><tr><th>Lote</th><th>Producto</th><th>Días</th><th>Urgencia</th></tr></thead>
+                <tbody>
+                {% for v in vencimientos %}
+                <tr>
+                    <td>{{ v.Numero_Lote }}</td>
+                    <td>{{ v.Producto }} {{ v.Presentacion }}</td>
+                    <td>{{ v.Dias_Restantes }}</td>
+                    <td><span class="badge {% if 'CRIT' in v.Nivel_Urgencia|upper %}badge-danger{% elif 'URG' in v.Nivel_Urgencia|upper %}badge-warn{% else %}badge-info{% endif %}">{{ v.Nivel_Urgencia }}</span></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}<div class="empty-state"><p>Sin alertas de vencimiento.</p></div>{% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const prodData = {{ produccion_planta | tojson }};
+const stockData = {{ estados_stock | tojson }};
+new Chart(document.getElementById('chartProduccion'), {
+    type: 'bar',
+    data: {
+        labels: prodData.map(d => d.planta),
+        datasets: [{ label: 'Unidades producidas', data: prodData.map(d => Number(d.produccion)), backgroundColor: '#1a5a85' }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+});
+new Chart(document.getElementById('chartStock'), {
+    type: 'doughnut',
+    data: {
+        labels: stockData.map(d => d.estado),
+        datasets: [{ data: stockData.map(d => d.cantidad), backgroundColor: ['#059669','#d97706','#dc2626','#0284c7'] }]
+    },
+    options: { responsive: true }
+});
+</script>
+{% endblock %}

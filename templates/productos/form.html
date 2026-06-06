@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if accion=='editar' else 'Nuevo' }} Producto — PIL Andina{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>{{ 'Editar' if accion=='editar' else 'Nuevo' }} Producto</h2>
+</div>
+<div class="card" style="max-width:700px">
+    <div class="card-body">
+        <form method="POST" class="form-grid">
+            <div class="form-group"><label>Código único</label><input class="form-control" name="codigo_unico" value="{{ producto.codigo_unico if producto else '' }}" required></div>
+            <div class="form-group"><label>Nombre comercial</label><input class="form-control" name="nombre_comercial" value="{{ producto.nombre_comercial if producto else '' }}" required></div>
+            <div class="form-group"><label>Tipo</label>
+                <select class="form-control" name="tipo_cerveza" required>
+                    {% for t in ['Lager','Pilsener','Malta','Negra'] %}
+                    <option value="{{ t }}" {% if producto and producto.tipo_cerveza==t %}selected{% endif %}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group"><label>Graduación alcohólica (%)</label><input class="form-control" type="number" step="0.1" name="graduacion_alcoholica" value="{{ producto.graduacion_alcoholica if producto else '' }}" required></div>
+            <div class="form-group"><label>Precio actual (Bs.)</label><input class="form-control" type="number" step="0.01" name="precio_actual" value="{{ producto.precio_actual if producto else '' }}" required></div>
+            <div class="form-group"><label>Stock mínimo alerta</label><input class="form-control" type="number" name="stock_minimo_alerta" value="{{ producto.stock_minimo_alerta if producto else 100 }}" required></div>
+            <div class="form-group"><label>Stock máximo alerta</label><input class="form-control" type="number" name="stock_maximo_alerta" value="{{ producto.stock_maximo_alerta if producto else 10000 }}" required></div>
+            <div class="form-actions" style="grid-column:1/-1">
+                <button class="btn btn-accent">Guardar</button>
+                <a href="{{ url_for('productos.listar') }}" class="btn btn-outline">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

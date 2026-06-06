@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Usuarios — PIL Andina{% endblock %}
+{% block content %}
+<div class="page-header"><h2>Gestión de Usuarios y Roles</h2><p>Administración de accesos: Administrador, Gerente, Distribuidor</p></div>
+
+<div class="card" style="margin-bottom:1.5rem">
+    <div class="card-header"><h3>Crear usuario</h3></div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('usuarios.crear') }}" class="form-grid">
+            <div class="form-group"><label>Usuario</label><input class="form-control" name="username" required></div>
+            <div class="form-group"><label>Contraseña</label><input class="form-control" type="password" name="password" required></div>
+            <div class="form-group"><label>Nombre completo</label><input class="form-control" name="nombre_completo" required></div>
+            <div class="form-group"><label>Correo</label><input class="form-control" type="email" name="correo" required></div>
+            <div class="form-group"><label>Rol</label>
+                <select class="form-control" name="id_rol" required>{% for r in roles %}<option value="{{ r.id_rol }}">{{ r.nombre_rol }}</option>{% endfor %}</select>
+            </div>
+            <div class="form-group"><label><input type="checkbox" name="activo" checked> Activo</label></div>
+            <div class="form-group" style="align-self:end"><button class="btn btn-accent">Crear</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h3>Usuarios del sistema ({{ usuarios|length }})</h3></div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>ID</th><th>Usuario</th><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody>
+            {% for u in usuarios %}
+            <tr>
+                <td>{{ u.id_usuario }}</td><td><strong>{{ u.username }}</strong></td><td>{{ u.nombre_completo }}</td><td>{{ u.correo }}</td>
+                <td><span class="badge badge-info">{{ u.nombre_rol }}</span></td>
+                <td><span class="badge {% if u.activo %}badge-ok{% else %}badge-danger{% endif %}">{{ 'Activo' if u.activo else 'Inactivo' }}</span></td>
+                <td>
+                    <form method="POST" action="{{ url_for('usuarios.editar', id_usuario=u.id_usuario) }}" class="form-grid" style="gap:0.25rem;min-width:280px">
+                        <input class="form-control" name="username" value="{{ u.username }}" style="font-size:0.75rem">
+                        <input class="form-control" name="nombre_completo" value="{{ u.nombre_completo }}" style="font-size:0.75rem">
+                        <input class="form-control" name="correo" value="{{ u.correo }}" style="font-size:0.75rem">
+                        <select class="form-control" name="id_rol" style="font-size:0.75rem">{% for r in roles %}<option value="{{ r.id_rol }}" {% if u.id_rol==r.id_rol %}selected{% endif %}>{{ r.nombre_rol }}</option>{% endfor %}</select>
+                        <input class="form-control" type="password" name="password" placeholder="Nueva contraseña (opcional)" style="font-size:0.75rem">
+                        <label style="font-size:0.75rem"><input type="checkbox" name="activo" {% if u.activo %}checked{% endif %}> Activo</label>
+                        <button class="btn btn-sm btn-outline">Actualizar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

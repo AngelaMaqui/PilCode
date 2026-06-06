@@ -1,25 +1,60 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Monitoreo Temporal - Admin</title>
-</head>
-<body>
-    <h2>Panel de Monitoreo Técnico (Solo Administradores)</h2>
-    <p><strong>Conexiones activas a MySQL:</strong> {{ conexiones }}</p>
-    
-    <h3>Últimos logs de auditoría (Triggers):</h3>
-    <ul>
-        {% for log in logs %}
-        <li>
-            [{{ log.fecha_accion }}] Tabla: {{ log.tabla_afectada }} | 
-            Acción: {{ log.accion_realizada }} | Usuario: {{ log.usuario_bd }}
-        </li>
-        {% else %}
-        <li>No hay acciones registradas en la tabla de auditoría todavía.</li>
-        {% endfor %}
-    </ul>
-    <br>
-    <a href="/auth/logout">Cerrar Sesión</a>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Monitoreo — PIL Andina{% endblock %}
+{% block content %}
+<div class="page-header"><h2>Panel de Monitoreo Técnico</h2><p>Conexiones activas, procesos, consultas lentas y auditoría</p></div>
+
+<div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon blue">⚡</div><div><div class="stat-value">{{ conexiones }}</div><div class="stat-label">Conexiones MySQL</div></div></div>
+    <div class="stat-card"><div class="stat-icon amber">🐢</div><div><div class="stat-value">{{ slow_queries }}</div><div class="stat-label">Consultas lentas</div></div></div>
+    <div class="stat-card"><div class="stat-icon green">⏱</div><div><div class="stat-value">{{ uptime }}s</div><div class="stat-label">Uptime del servidor</div></div></div>
+    <div class="stat-card"><div class="stat-icon red">📋</div><div><div class="stat-value">{{ total_logs }}</div><div class="stat-label">Registros de auditoría</div></div></div>
+</div>
+
+<div class="content-grid two-col" style="margin-bottom:1.5rem">
+    <div class="card">
+        <div class="card-header"><h3>Procesos activos (SHOW PROCESSLIST)</h3></div>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead><tr><th>ID</th><th>Usuario</th><th>Host</th><th>DB</th><th>Comando</th><th>Tiempo</th><th>Estado</th></tr></thead>
+                <tbody>
+                {% for p in procesos %}
+                <tr><td>{{ p.Id }}</td><td>{{ p.User }}</td><td>{{ p.Host }}</td><td>{{ p.db or '—' }}</td><td>{{ p.Command }}</td><td>{{ p.Time }}s</td><td>{{ p.State or '—' }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>EXPLAIN — Consulta optimizada de stock</h3></div>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead><tr><th>Tabla</th><th>Tipo</th><th>Key</th><th>Rows</th><th>Extra</th></tr></thead>
+                <tbody>
+                {% for e in explain_stock %}
+                <tr><td>{{ e.table or e.get('table','—') }}</td><td>{{ e.type or e.get('type','—') }}</td><td>{{ e.key or e.get('key','—') }}</td><td>{{ e.rows or e.get('rows','—') }}</td><td>{{ e.Extra or e.get('Extra','—') }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h3>Logs de auditoría (Triggers)</h3><span class="badge badge-info">Últimos 50</span></div>
+    <div class="table-wrap">
+        {% if logs %}
+        <table class="data-table">
+            <thead><tr><th>Fecha</th><th>Tabla</th><th>Acción</th><th>Usuario BD</th></tr></thead>
+            <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.fecha_accion }}</td><td><strong>{{ log.tabla_afectada }}</strong></td>
+                <td><span class="badge badge-info">{{ log.accion_realizada }}</span></td><td>{{ log.usuario_bd }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}<div class="empty-state"><p>Sin registros de auditoría.</p></div>{% endif %}
+    </div>
+</div>
+{% endblock %}

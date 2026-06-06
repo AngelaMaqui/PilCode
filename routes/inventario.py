@@ -9,16 +9,57 @@ inventario_bp = Blueprint('inventario', __name__)
 @inventario_bp.route('/stock')
 @role_required([1, 2, 3])
 def ver_stock():
-    """Consume directamente la Vista Almacenada en MySQL para los inventarios"""
+    producto = request.args.get('producto', '').strip()
+    planta = request.args.get('planta', '').strip()
+    bodega = request.args.get('bodega', '').strip()
+    estado = request.args.get('estado', '').strip()
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    
-    cursor.execute("SELECT * FROM vista_stock_consolidado")
+
+    sql = 'SELECT * FROM vista_stock_consolidado WHERE 1=1'
+    params = []
+    if producto:
+        sql += ' AND Producto LIKE %s'
+        params.append(f'%{producto}%')
+    if planta:
+        sql += ' AND Planta LIKE %s'
+        params.append(f'%{planta}%')
+    if bodega:
+        sql += ' AND Bodega LIKE %s'
+        params.append(f'%{bodega}%')
+    if estado:
+        sql += ' AND Estado_Inventario LIKE %s'
+        params.append(f'%{estado}%')
+
+    sql += ' ORDER BY Producto, Planta'
+    cursor.execute(sql, params)
     productos_stock = cursor.fetchall()
-    
+
+    cursor.execute('SELECT DISTINCT Planta AS nombre FROM vista_stock_consolidado ORDER BY Planta')
+    plantas = [r['nombre'] for r in cursor.fetchall()]
+    cursor.execute('SELECT DISTINCT Bodega AS nombre FROM vista_stock_consolidado ORDER BY Bodega')
+    bodegas = [r['nombre'] for r in cursor.fetchall()]
+    cursor.execute('SELECT DISTINCT Estado_Inventario AS nombre FROM vista_stock_consolidado')
+    estados = [r['nombre'] for r in cursor.fetchall()]
+
+    cursor.execute(
+        '''SELECT id_presentacion, codigo_presentacion, volumen FROM presentaciones ORDER BY id_presentacion'''
+    )
+    presentaciones = cursor.fetchall()
+    cursor.execute('SELECT id_planta, nombre_planta FROM plantas ORDER BY id_planta')
+    plantas_sel = cursor.fetchall()
+    cursor.execute('SELECT id_bodega, nombre_bodega FROM bodegas ORDER BY id_bodega')
+    bodegas_sel = cursor.fetchall()
+
     cursor.close()
     conn.close()
-    return render_template('inventario/stock.html', stock=productos_stock)
+    return render_template(
+        'inventario/stock.html', stock=productos_stock,
+        plantas=plantas, bodegas=bodegas, estados=estados,
+        presentaciones=presentaciones, plantas_sel=plantas_sel, bodegas_sel=bodegas_sel,
+        filtro_producto=producto, filtro_planta=planta, filtro_bodega=bodega, filtro_estado=estado
+    )
 
 
 @inventario_bp.route('/lotes/registrar', methods=['POST'])

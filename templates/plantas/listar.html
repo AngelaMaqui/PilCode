@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Plantas y Bodegas — PIL Andina{% endblock %}
+{% block content %}
+<div class="page-header"><h2>Plantas y Bodegas</h2><p>3 plantas industriales con bodegas de almacenamiento</p></div>
+
+<div class="stats-grid">
+{% for p in plantas %}
+<div class="stat-card"><div class="stat-icon blue">🏭</div><div><div class="stat-value">{{ p.nombre_planta }}</div><div class="stat-label">{{ p.ubicacion_especifica }}</div></div></div>
+{% endfor %}
+</div>
+
+<div class="card" style="margin-bottom:1.5rem">
+    <div class="card-header"><h3>Filtrar bodegas</h3></div>
+    <div class="card-body">
+        <form method="GET" class="form-grid">
+            <div class="form-group"><label>Planta</label>
+                <select class="form-control" name="planta"><option value="">Todas</option>{% for p in plantas %}<option value="{{ p.id_planta }}" {% if planta_filtro|string==p.id_planta|string %}selected{% endif %}>{{ p.nombre_planta }}</option>{% endfor %}</select>
+            </div>
+            <div class="form-group"><label>Tipo bodega</label><input class="form-control" name="tipo_bodega" value="{{ tipo_bodega_filtro }}" placeholder="Terminado, Insumos..."></div>
+            <div class="form-group" style="align-self:end"><button class="btn btn-primary">Filtrar</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h3>Bodegas ({{ bodegas|length }})</h3></div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Planta</th><th>Ubicación</th><th>Bodega</th><th>Capacidad</th><th>Temperatura °C</th>{% if session.get('role_id') in [1,2] %}<th>Acciones</th>{% endif %}</tr></thead>
+            <tbody>
+            {% for b in bodegas %}
+            <tr>
+                <td><strong>{{ b.nombre_planta }}</strong></td><td>{{ b.ubicacion_especifica }}</td><td>{{ b.nombre_bodega }}</td>
+                <td>{{ b.capacidad_maxima }} u.</td><td>{{ b.temperatura_almacenamiento }}</td>
+                {% if session.get('role_id') in [1,2] %}
+                <td>
+                    <form method="POST" action="{{ url_for('plantas.editar_bodega', id_bodega=b.id_bodega) }}" class="form-grid" style="gap:0.25rem">
+                        <input type="hidden" name="id_planta" value="{{ b.id_planta }}">
+                        <input class="form-control" name="nombre_bodega" value="{{ b.nombre_bodega }}" style="font-size:0.75rem;padding:0.3rem">
+                        <input class="form-control" type="number" name="capacidad_maxima" value="{{ b.capacidad_maxima }}" style="font-size:0.75rem;padding:0.3rem">
+                        <input class="form-control" type="number" step="0.1" name="temperatura_almacenamiento" value="{{ b.temperatura_almacenamiento }}" style="font-size:0.75rem;padding:0.3rem">
+                        <button class="btn btn-sm btn-outline">Guardar</button>
+                    </form>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if session.get('role_id') in [1,2] %}
+    <div class="card-body" style="border-top:1px solid var(--border)">
+        <h4 style="margin-bottom:1rem">Nueva bodega</h4>
+        <form method="POST" action="{{ url_for('plantas.crear_bodega') }}" class="form-grid">
+            <div class="form-group"><label>Planta</label><select class="form-control" name="id_planta" required>{% for p in plantas %}<option value="{{ p.id_planta }}">{{ p.nombre_planta }}</option>{% endfor %}</select></div>
+            <div class="form-group"><label>Nombre</label><input class="form-control" name="nombre_bodega" required></div>
+            <div class="form-group"><label>Capacidad máxima</label><input class="form-control" type="number" name="capacidad_maxima" required></div>
+            <div class="form-group"><label>Temperatura °C</label><input class="form-control" type="number" step="0.1" name="temperatura_almacenamiento" required></div>
+            <div class="form-group" style="align-self:end"><button class="btn btn-accent">Registrar</button></div>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

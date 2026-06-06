@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Pedidos — PIL Andina{% endblock %}
+{% block content %}
+<div class="page-header"><h2>Gestión de Pedidos</h2><p>Pedidos de distribuidores, facturación y despacho</p></div>
+
+<div class="card" style="margin-bottom:1.5rem">
+    <div class="card-header"><h3>Filtros avanzados</h3></div>
+    <div class="card-body">
+        <form method="GET" class="form-grid">
+            <div class="form-group"><label>Estado</label>
+                <select class="form-control" name="estado"><option value="">Todos</option>
+                {% for e in ['Pendiente','Despachado','Entregado','Cancelado'] %}<option value="{{ e }}" {% if estado_filtro==e %}selected{% endif %}>{{ e }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group"><label>Distribuidor</label><input class="form-control" name="distribuidor" value="{{ distribuidor_filtro }}"></div>
+            <div class="form-group"><label>Ciudad</label>
+                <select class="form-control" name="ciudad"><option value="">Todas</option>{% for c in ciudades %}<option value="{{ c }}" {% if ciudad_filtro==c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select>
+            </div>
+            <div class="form-group" style="align-self:end"><button class="btn btn-primary">Buscar</button></div>
+        </form>
+    </div>
+</div>
+
+{% if session.get('role_id') in [1,2,3] %}
+<div class="card" style="margin-bottom:1.5rem">
+    <div class="card-header"><h3>Nuevo pedido</h3></div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('pedidos.crear') }}" class="form-grid">
+            <div class="form-group"><label>Distribuidor</label>
+                <select class="form-control" name="id_distribuidor" required>{% for d in distribuidores %}<option value="{{ d.id_distribuidor }}">{{ d.razon_social }}</option>{% endfor %}</select>
+            </div>
+            <div class="form-group"><label>Producto / Presentación</label>
+                <select class="form-control" name="id_presentacion" required>{% for pr in presentaciones %}<option value="{{ pr.id_presentacion }}">{{ pr.nombre_comercial }} {{ pr.volumen }} ({{ pr.codigo_presentacion }})</option>{% endfor %}</select>
+            </div>
+            <div class="form-group"><label>Cantidad</label><input class="form-control" type="number" name="cantidad_solicitada" min="1" required></div>
+            <div class="form-group"><label>Fecha entrega requerida</label><input class="form-control" type="date" name="fecha_entrega_requerida" required></div>
+            <div class="form-group" style="align-self:end"><button class="btn btn-accent">Crear pedido</button></div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header"><h3>Pedidos ({{ pedidos|length }})</h3></div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>#</th><th>Distribuidor</th><th>Ciudad</th><th>Fecha pedido</th><th>Entrega</th><th>Factura</th><th>Monto</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody>
+            {% for p in pedidos %}
+            <tr>
+                <td><strong>#{{ p.id_pedido }}</strong></td>
+                <td>{{ p.razon_social }}</td><td>{{ p.ciudad }}</td>
+                <td>{{ p.fecha_pedido }}</td><td>{{ p.fecha_entrega_requerida }}</td>
+                <td>{{ p.nro_factura or '—' }}</td><td>{{ p.monto_total or '—' }}</td>
+                <td><span class="badge badge-info">{{ p.estado_pago or '—' }}</span></td>
+                <td><span class="badge {% if p.estado_pedido=='Pendiente' %}badge-warn{% elif p.estado_pedido=='Entregado' %}badge-ok{% else %}badge-info{% endif %}">{{ p.estado_pedido }}</span></td>
+                <td>
+                    {% if session.get('role_id') in [1,2] and p.estado_pedido == 'Pendiente' %}
+                    <form method="POST" action="{{ url_for('pedidos.despachar', id_pedido=p.id_pedido) }}" style="display:flex;gap:0.25rem;flex-wrap:wrap">
+                        <select class="form-control" name="id_bodega_origen" style="font-size:0.75rem;max-width:120px" required>
+                            {% for b in bodegas %}<option value="{{ b.id_bodega }}">{{ b.nombre_bodega }}</option>{% endfor %}
+                        </select>
+                        <select class="form-control" name="id_lote_despacho" style="font-size:0.75rem;max-width:140px" required>
+                            {% for l in lotes %}<option value="{{ l.id_lote }}">{{ l.numero_lote_unico }} - {{ l.nombre_comercial }}</option>{% endfor %}
+                        </select>
+                        <button class="btn btn-sm btn-success">Despachar</button>
+                    </form>
+                    {% endif %}
+                    {% if session.get('role_id') in [1,2] %}
+                    <form method="POST" action="{{ url_for('pedidos.cambiar_estado', id_pedido=p.id_pedido) }}" style="margin-top:0.25rem;display:flex;gap:0.25rem">
+                        <select class="form-control" name="estado_pedido" style="font-size:0.75rem">
+                            {% for e in ['Pendiente','Despachado','Entregado','Cancelado'] %}<option value="{{ e }}" {% if p.estado_pedido==e %}selected{% endif %}>{{ e }}</option>{% endfor %}
+                        </select>
+                        <select class="form-control" name="estado_pago" style="font-size:0.75rem">
+                            {% for e in ['Pendiente','Pagado','Anulado'] %}<option value="{{ e }}" {% if p.estado_pago==e %}selected{% endif %}>{{ e }}</option>{% endfor %}
+                        </select>
+                        <button class="btn btn-sm btn-outline">Actualizar</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}<tr><td colspan="10">Sin pedidos.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
